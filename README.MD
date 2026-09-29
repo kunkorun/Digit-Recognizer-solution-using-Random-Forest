@@ -1,162 +1,177 @@
-# Digit Recognizer — Handwritten Digit Classification
+# 🔢 Digit Recognizer — Handwritten Digit Classification
 
-In this project, I tackle the handwritten digit classification task from the [Kaggle Digit Recognizer competition](https://www.kaggle.com/competitions/digit-recognizer). The input consists of 28×28 grayscale images, and the goal is to predict a digit from 0 to 9.
+This was my fourth Kaggle Machine Learning project and my first project working with image data.
 
-For me, this project was less about the final accuracy and more about building a solid approach: with honest EDA, cross-validation, error analysis, and clear takeaways.
+The goal was to recognize handwritten digits from grayscale images.
+
+**Kaggle Score: 0.96550**
 
 ---
 
-## Problem
+## 🎯 Goal
 
-The task is multiclass classification (10 classes). I use **accuracy** as the main evaluation metric.
+The main goal of this project was to step outside the usual tabular Machine Learning workflow and work with image data.
 
-## Data
+I wanted to understand how a classical Machine Learning approach would perform on handwritten digit recognition before moving on to more advanced computer vision methods.
 
-The dataset consists of pixel-based representations of handwritten digits:
+I focused on:
 
-- `train.csv` — 42,000 labeled observations (working dataset)
-- `test.csv` — 28,000 unlabeled observations (for the final Kaggle submission)
-- `sample_submission.csv` — submission format template
+* understanding the structure of image data;
+* building a baseline;
+* comparing different models;
+* using cross-validation;
+* tuning the final model;
+* analysing classification errors visually.
 
-Each image is represented by 784 pixel features (28 × 28) with values ranging from 0 to 255. The training set includes the target column `label`. I found no missing values during the data audit, and the classes are roughly balanced (5 is the least frequent, while 1, 3, and 7 are the most frequent).
+---
 
-## EDA
+## 🖼️ Dataset
 
-During the exploratory analysis, I:
+Each image represents a handwritten digit from **0 to 9**.
 
-- inspected individual digit images
-- compared examples across different classes
-- built average images for all 10 classes
-- examined the distribution of zero and non-zero pixels
-- analyzed stroke position variability within the same class
+The images have a resolution of **28 × 28 pixels**, which means that each image can be represented by **784 pixel features**.
 
-The average images revealed something interesting: while each digit has a common overall structure, the position of individual strokes can vary significantly across examples. Because of this, some areas in the average images look blurred — and these blurred regions later helped explain some of the model's errors.
+The target variable is the digit label.
 
-## Modeling Approach
+Although the data represents images, I initially treated the pixels as regular numerical features and used classical Machine Learning models.
 
-I followed this pipeline:
+---
 
-1. Data audit
-2. Exploratory data analysis
-3. Logistic Regression baseline
-4. Random Forest baseline
-5. 5-fold cross-validation
-6. RandomizedSearchCV for Random Forest hyperparameters
-7. Error analysis via confusion matrix
-8. Manual review of misclassified images
-9. Final Random Forest training on the full train set
-10. Kaggle submission
+## 🔍 Exploratory Data Analysis
 
-### Logistic Regression
+I started by checking:
 
-My first logistic regression scored around **0.906** on cross-validation. The initial run ended with a convergence warning — I added `StandardScaler`, the warning disappeared, but it didn't boost accuracy. For pixels, scaling turned out to be useful only for convergence, not for performance.
+* dataset shape;
+* pixel value ranges;
+* target distribution;
+* missing values;
+* image dimensions.
 
-### Random Forest
+I also visualized individual images to make sure I understood how the pixel values represented the handwritten digits.
 
-Random Forest on the raw pixels scored around **0.9639** mean accuracy on 5-fold CV — noticeably better than the linear model. So, I took it as the baseline for further tuning.
+This was useful because looking at the raw numbers alone does not give much intuition about what the model is actually seeing.
 
-## Hyperparameter Tuning
+---
 
-I searched for hyperparameters using `RandomizedSearchCV` over the following space:
+## 🤖 Baseline
 
-| Parameter | Values |
-|---|---|
-| `n_estimators` | 100, 200, 300 |
-| `max_depth` | None, 5, 10, 15, 20, 30 |
-| `min_samples_split` | 2, 5, 10, 20 |
-| `min_samples_leaf` | 1, 2, 4, 8 |
-| `max_features` | sqrt, log2, None |
+I started with **Logistic Regression** as a baseline.
 
-Search settings: `n_iter=20`, `cv=5`, `scoring='accuracy'`, `random_state=42`.
+The idea was to first establish a relatively simple reference point before trying a more complex model.
 
-Best configuration found:
+This gave me a starting point for comparing later experiments.
+
+---
+
+## 🌲 Random Forest
+
+I then experimented with **Random Forest**.
+
+I compared the model using cross-validation and later tuned its hyperparameters.
+
+The main goal was not simply to find a better score, but to check whether the additional model complexity actually produced a meaningful improvement over the baseline.
+
+---
+
+## 📊 Cross-Validation & Tuning
+
+I used **5-fold cross-validation** during model evaluation.
+
+I also experimented with different Random Forest hyperparameters and compared the results with the previous model.
+
+This helped me get more comfortable with the idea that a model should be evaluated on multiple splits rather than relying on a single validation result.
+
+---
+
+## 🔎 Error Analysis
+
+One of the most useful parts of this project was looking at the mistakes made by the final model.
+
+I used a **confusion matrix** to see which digits were most often confused with each other.
+
+I also visualized incorrectly classified images and looked at the actual handwritten digits.
+
+This helped me see that some mistakes are understandable even for a human because different handwritten styles can make two digits look quite similar.
+
+---
+
+## 🧪 Experiments
+
+The main experiments included:
+
+* Logistic Regression baseline;
+* Random Forest;
+* 5-fold cross-validation;
+* Random Forest hyperparameter tuning;
+* confusion matrix analysis;
+* visual analysis of incorrect predictions.
+
+The general workflow was:
 
 ```text
-n_estimators      = 100
-max_depth         = 30
-min_samples_split = 2
-min_samples_leaf  = 1
-max_features      = sqrt
+Baseline
+   ↓
+New model
+   ↓
+Cross-validation
+   ↓
+Tuning
+   ↓
+Error analysis
+   ↓
+Final model
 ```
 
-Interestingly, the tuning **did not yield a substantial improvement** over the baseline. I decided not to complicate the search further: adding complexity without a clear payoff didn't seem justified to me.
+---
 
-## Error Analysis
+## 🏁 Final Result
 
-The confusion matrix highlighted the most frequent confusions:
+The final model achieved:
 
-- `1 → 6`
-- `4 → 9`
-- `7 ↔ 9`
+**Kaggle Score: 0.96550**
 
-I manually inspected a few examples from the `4 → 9` pair — in 3 out of 5 cases, the four genuinely looked like a nine. This partially confirmed my hypothesis: some errors are tied to natural handwriting variability and similar digit shapes.
+The final version of the notebook also contains a separate section for the final model and prediction pipeline, so that the final submission can be reproduced without having to rerun every experimental step.
 
-However, the number of errors in each pair was relatively small (under 20), so I decided against building dedicated feature engineering for these specific cases.
+---
 
-## Final Result
+## 💡 What I Learned
 
-I trained the final Random Forest on the entire labeled train set and generated predictions for the Kaggle test set.
+This project taught me several new things:
 
-| Metric | Value |
-|---|---|
-| Local validation accuracy | 0.96095 |
-| Kaggle accuracy | 0.96550 |
+* image data can be used with classical Machine Learning models when represented as numerical features;
+* cross-validation gives a more reliable estimate than a single split;
+* hyperparameter tuning does not always lead to a major improvement;
+* confusion matrices can reveal useful information that a single accuracy score cannot;
+* visual error analysis makes model mistakes much easier to understand;
+* a good final notebook should separate experimentation from the final reproducible pipeline.
 
-The final submission contains 28,000 predictions — exactly matching the number of rows in the Kaggle test set.
+---
 
-## Conclusions
+## 🚧 What I Would Improve
 
-For me, the main takeaway from this project isn't just the final accuracy, but the refinement of my overall approach. Along the way, I learned to:
+If I returned to this project now, I would like to compare the classical approach with methods specifically designed for image data.
 
-- compare models using cross-validation rather than relying on a single holdout score
-- formulate hypotheses **before** changing anything in the model or features
-- use visual analysis to explore image data
-- conduct error analysis before deciding whether it's even worth improving the model further
-- distinguish a small random difference from a meaningful improvement
-- keep the final pipeline separate from exploratory experiments
+For example, I would be interested in seeing how a Convolutional Neural Network performs on the same dataset.
 
-## Limitations and Future Work
+I would also like to investigate the misclassified digit pairs in more detail and see whether additional preprocessing could help.
 
-The main limitation of the project is the relatively modest error analysis. The confusion matrix and manual review of a few errors helped explain certain cases, but didn't lead to a new feature engineering approach.
+---
 
-Another point is the model choice. Random Forest performed well, but I didn't compare it with approaches that better capture the spatial structure of images (like CNNs).
+## ▶️ How to Run
 
-A logical next step would be to compare Random Forest with image-specific models and evaluate them using the same validation methodology.
-
-## How to Run
-
-1. Place the Kaggle dataset files in the project root:
-   - `train.csv`
-   - `test.csv`
-   - `sample_submission.csv`
-
-2. Run the notebook (or script) from top to bottom.
-
-3. The final block will train the selected Random Forest on the full labeled dataset and save the predictions to `submission.csv`.
-
-## Reproducibility
-
-I used `random_state=42` in all experiments where applicable. The final model uses the hyperparameters found during the `RandomizedSearchCV` run.
-
-## Git Workflow
-
-I used the repository to maintain reproducibility and track meaningful changes.
-
-Example workflow:
+Install the required dependencies:
 
 ```bash
-git status
-git add .
-git commit -m "Complete Digit Recognizer modeling and submission"
-git push
+pip install -r requirements.txt
 ```
 
-I try to keep commits atomic with clear messages, for example:
+Then open the notebook and run the project from the beginning.
 
-- `Add data audit and EDA`
-- `Add Logistic Regression baseline`
-- `Add Random Forest baseline`
-- `Add Random Forest tuning`
-- `Add error analysis`
-- `Finalize Kaggle submission`
-- `Add project README`
+The final model and submission pipeline are separated from the experimental sections.
+
+---
+
+## 🔗 Links
+
+* **Kaggle:** [Digit Recognizer](https://www.kaggle.com/competitions/digit-recognizer)
+* **My Kaggle Profile:** [kunkorun](https://www.kaggle.com/kunkorun)
